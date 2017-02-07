@@ -1,0 +1,87 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-SIM-01
+SELECT ?p ?o 
+WHERE {     
+	#!data(<|person|>,?p,?o)!#
+}
+LIMIT 1000 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-SIM-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT DISTINCT ?city ?pop
+WHERE {     
+	#!data(?city,dbo:populationTotal,?pop)!#
+	#!data(?city,dbo:country,<|country|>)!#
+	FILTER(?pop>20000||?pop>"20000")
+}
+LIMIT 10000 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-MED-01
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?p ?o 
+WHERE {     
+	#!data(<|e_en|>,owl:sameAs,?e_de)!#
+  	#!data(<|e_en|>,?p,?o)!#
+  	FILTER EXISTS { #!data(?e_de,?p,?o)!# }
+  	FILTER(?e_de!=<|e_en|>).
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-MED-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT (count(distinct ?company) as ?c)
+WHERE {     
+	#!data(?company,dbo:locationCountry,<|country|>)!#
+	#!data(?company,rdf:type,dbo:Company)!#
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-HAR-01
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT  DISTINCT ?company1
+WHERE { {
+        	#!data(?company1,rdf:type,dbo:Company)!#
+        	#!data(?company2,rdf:type,dbo:Company)!#
+        	#!data(?company1,dbo:industry,<|sector|>)!#
+        	#!data(?company2,dbo:industry,<|sector|>)!#
+        } OPTIONAL{
+        	#!data(?company1,rdfs:label,?label1)!#
+        	#!data(?company2,rdfs:label,?label2)!#
+       	} OPTIONAL{
+        	#!data(?company1,dbo:locationCity,?city1)!#
+        	#!data(?company2,dbo:locationCity,?city2)!#
+       	} OPTIONAL{
+        	#!data(?company1,dbo:locationCountry,?country1)!#
+        	#!data(?company2,dbo:locationCountry,?country2)!#
+       	}
+		FILTER(?company1!=?company2 && ( (?label1=?label2 && STRLEN(?label1)>3) || ?city1=?city2 || ?country1=?country2 )   )   
+} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-HAR-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT  DISTINCT ?person
+WHERE { 
+	{#!data(?person,rdf:type,owl:Thing)!#}
+	#OPTIONAL
+	{#!data(?person,?p,?place)!# #!data(?place,rdf:type,dbo:Place)!# }
+	OPTIONAL 
+	{#!data(?place,owl:sameAs,?place2)!#}
+
+	FILTER ( 		EXISTS{#!data(?place2,dbo:isPartOf,<|region|>)!#} 
+			 || 	EXISTS{#!data(?place,dbo:isPartOf,<|region|>)!#} 	)
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-HAR-03
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT ?p ?o
+WHERE { 
+    	{
+    		#!data(?e_en,rdf:type,dbo:Company)!#
+    		#!data(?e_en,?p,?o)!#
+    		#OPTIONAL { #!data(?e_en,owl:sameAs,?e_de)!# }
+    		#!data(?e_en,owl:sameAs,?e_de)!# 
+    	} UNION 
+    	{
+    		#!data(?e_de,rdf:type,dbo:Company)!#
+    		#!data(?e_de,?p,?o)!#
+    	}
+} 

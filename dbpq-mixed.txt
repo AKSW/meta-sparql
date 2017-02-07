@@ -1,0 +1,95 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBM-SIM-01
+SELECT ?p ?o ?date
+WHERE {     
+	#!reif(?id,<|person|>,?p,?o)!# 
+	#!meta2(?id,<http://purl.org/dc/element/1.1/created>,?date)!#
+}
+LIMIT 1000 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBM-SIM-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT DISTINCT ?city ?pop ?provenance
+WHERE {     
+	#!reif(?id,?city,dbo:populationTotal,?pop)!#
+	#!data(?city,dbo:country,<|country|>)!#
+	#!meta(?id,<http://ns.inria.fr/dbpediafr/voc#hasMainRevision>,?provenance)!#
+	FILTER(?pop>20000||?pop>"20000")
+}
+LIMIT 10000 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBM-MED-01
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?p ?o ?confidence
+WHERE {     
+	#!reif(?id,<|e_en|>,owl:sameAs,?e_de)!#
+  	#!data(<|e_en|>,?p,?o)!#
+  	FILTER EXISTS { #!data(?e_de,?p,?o)!# }
+  	#!meta2(?id,<http://ns.inria.fr/dbpediafr/voc#uniqueContributorNb>,?confidence)!#
+  	FILTER(?e_de!=<|e_en|>).
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBM-MED-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT (count(distinct ?company) as ?c)
+WHERE {     
+	#!reif(?id2,?company,dbo:locationCountry,<|country|>)!#
+	#!reif(?id,?company,rdf:type,dbo:Company)!#
+	#!meta2(?id,<http://ns.inria.fr/dbpediafr/voc#uniqueContributorNb>,?cont)!#
+	#!meta2(?id2,<http://ns.inria.fr/dbpediafr/voc#revPerYear2016>,?revs)!#
+	FILTER(?revs >5 && ?cont>10)
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBM-HAR-01
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT  DISTINCT ?company1 ?mod1 ?mod2
+WHERE { {
+        	#!data(?company1,rdf:type,dbo:Company)!#
+        	#!data(?company2,rdf:type,dbo:Company)!#
+        	#!reif(?id1,?company1,dbo:industry,<|sector|>)!#
+        	#!meta2(?id1,<http://purl.org/dc/element/1.1/modified>,?mod1)!#
+        	#!reif(?id2,?company2,dbo:industry,<|sector|>)!#
+        	#!meta2(?id2,<http://purl.org/dc/element/1.1/modified>,?mod2)!#
+        } OPTIONAL{
+        	#!data(?company1,rdfs:label,?label1)!#
+        	#!data(?company2,rdfs:label,?label2)!#
+       	} OPTIONAL{
+        	#!data(?company1,dbo:locationCity,?city1)!#
+        	#!data(?company2,dbo:locationCity,?city2)!#
+       	} OPTIONAL{
+        	#!data(?company1,dbo:locationCountry,?country1)!#
+        	#!data(?company2,dbo:locationCountry,?country2)!#
+       	}
+		FILTER(?company1!=?company2 && ( (?label1=?label2 && STRLEN(?label1)>3) || ?city1=?city2 || ?country1=?country2 )   )   
+} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBM-HAR-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT  DISTINCT ?person ?provenance
+WHERE { 
+	{#!reif(?id,?person,rdf:type,owl:Thing)!# #!meta(?id,<http://ns.inria.fr/dbpediafr/voc#hasMainRevision>,?provenance)!#}
+	#OPTIONAL
+	{#!data(?person,?p,?place)!# #!data(?place,rdf:type,dbo:Place)!# }
+	OPTIONAL 
+	{#!data(?place,owl:sameAs,?place2)!#}
+
+	FILTER ( 		EXISTS{#!data(?place2,dbo:isPartOf,<|region|>)!#} 
+			 || 	EXISTS{#!data(?place,dbo:isPartOf,<|region|>)!#} 	)
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBM-HAR-03
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT ?p ?o
+WHERE { 
+    	{
+    		#!data(?e_en,rdf:type,dbo:Company)!#
+    		#!data(?e_en,?p,?o)!#
+    		#OPTIONAL { #!data(?e_en,owl:sameAs,?e_de)!# }
+    		#!data(?e_en,owl:sameAs,?e_de)!# 
+    	} UNION 
+    	{
+    		#!data(?e_de,rdf:type,dbo:Company)!#
+    		#!data(?e_de,?p,?o)!#
+    	}
+} 

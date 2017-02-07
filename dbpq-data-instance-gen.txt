@@ -1,0 +1,54 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-SIM-01
+PREFIX schema: <http://schema.org/>
+SELECT ?person
+WHERE {    
+		#!data(?person,rdf:type,schema:Person)!#  
+    	BIND(<SHORT_OR_LONG::bif:rnd>(100000000, ?person) as ?rand) .
+}  ORDER BY ?rand LIMIT 100
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-SIM-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT DISTINCT ?country
+WHERE {     
+	#!data(?city,dbo:populationTotal,?pop)!#
+	#!data(?country,rdf:type,dbo:Country)!#
+	#!data(?city,dbo:country,?country)!#
+	BIND(<SHORT_OR_LONG::bif:rnd>(100000000, ?country) as ?rand) .
+} ORDER BY ?rand LIMIT 100
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-MED-01
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+SELECT ?rand ?e_en
+WHERE {     
+        #!data(?e_en,owl:sameAs,?e_de)!#
+        #!data(?e_de,owl:sameAs,?e_en)!#
+       BIND(<SHORT_OR_LONG::bif:rnd>(100000000, ?e_en, ?e_de) as ?rand) .
+}  ORDER BY ?rand LIMIT 100
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-MED-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT  DISTINCT ?country
+WHERE {     
+        #!data(?company,rdf:type,dbo:Company)!#
+        #!data(?company,dbo:locationCountry,?country)!#
+        #!data(?country,rdf:type,dbo:Country)!#
+        BIND(<SHORT_OR_LONG::bif:rnd>(100000000, ?country) as ?rand) .
+} ORDER BY ?rand LIMIT 100
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-HAR-02
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT  DISTINCT ?sector count(?sector) as ?c
+WHERE {  
+        #!data(?s,dbo:industry,?sector)!# 
+        #BIND(<SHORT_OR_LONG::bif:rnd>(100000000, ?sector) as ?rand) .
+} ORDER BY desc( ?c) LIMIT 100
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    DBQ-HAR-01
+PREFIX dbo: <http://dbpedia.org/ontology/>
+SELECT  DISTINCT ?reg as ?region count(*) as ?c
+WHERE { 
+   ?reg a <http://dbpedia.org/ontology/AdministrativeRegion>. ?s2 ?p2 ?place. ?s2 a dbo:Person. ?place ?p ?reg.
+} order by  desc(?c) LIMIT 100
+
+
+
